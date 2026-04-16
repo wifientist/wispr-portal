@@ -60,25 +60,39 @@ The application expects the following parameters from the WISPr redirection:
 - Python 3.8 or higher
 - pip package manager
 
+### Environment Configuration
+Copy the example environment file and edit it with your values:
+```bash
+cp .env.example .env
+```
+
+Available environment variables:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | Server port |
+| `INTEGRATION_KEY` | _(none)_ | RUCKUS integration key (optional, can also be entered in the UI) |
+| `NBI_IP` | _(none)_ | Default RUCKUS One tenant URL |
+| `FLASK_DEBUG` | `false` | Enable Flask debug mode for development |
+
 ### Quick Start
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd wispr-portal
 
-# Run the setup script (creates venv and installs dependencies)
+# Run the setup script (creates venv, copies .env, installs dependencies)
 ./run_local.sh
 ```
 
 ### Manual Setup
 ```bash
 # Create virtual environment
-python3 -m venv venv
+python3 -m venv .venv
 
 # Activate virtual environment
-source venv/bin/activate  # On macOS/Linux
+source .venv/bin/activate  # On macOS/Linux
 # or
-venv\Scripts\activate     # On Windows
+.venv\Scripts\activate     # On Windows
 
 # Install dependencies
 pip install -r requirements.txt
@@ -86,6 +100,14 @@ pip install -r requirements.txt
 # Run the server
 python server.py
 ```
+
+### Docker Compose
+For a containerized local environment:
+```bash
+cp .env.example .env    # Configure your environment
+docker compose up --build
+```
+This mounts `server.py` and `index.html` as volumes so changes are reflected without rebuilding.
 
 ### Testing Locally
 1. Open your browser to: http://localhost:8080
@@ -241,6 +263,18 @@ gcloud run deploy $SERVICE_NAME \
   --set-env-vars INTEGRATION_KEY_SECRET=projects/$PROJECT_ID/secrets/wispr-integration-key/versions/latest
 ```
 
+## Railway Deployment
+
+Railway auto-detects the Dockerfile and deploys with zero configuration.
+
+1. **Connect your repo** at [railway.app](https://railway.app) and link your GitHub repository
+2. **Set environment variables** in the Railway dashboard:
+   - `INTEGRATION_KEY` (optional) — your RUCKUS integration key
+   - `PORT` is set automatically by Railway
+3. **Deploy** — Railway builds from the Dockerfile and assigns a public URL
+
+That's it. The included `railway.json` and `Procfile` handle the rest.
+
 ## Architecture
 
 ```
@@ -269,11 +303,15 @@ wispr-portal/
 ├── index.html              # Main web interface
 ├── server.py               # Flask application server
 ├── requirements.txt        # Python dependencies
-├── Dockerfile             # Container configuration
-├── run_local.sh           # Local development script
-├── .gcloudignore          # Cloud deployment exclusions
-├── .gitignore             # Git exclusions
-└── README.md              # This documentation
+├── .env.example            # Environment variable template
+├── Dockerfile              # Container configuration
+├── docker-compose.yml      # Local containerized development
+├── Procfile                # Process definition for Railway/Heroku
+├── railway.json            # Railway deployment configuration
+├── run_local.sh            # Local development script
+├── .gcloudignore           # Cloud deployment exclusions
+├── .gitignore              # Git exclusions
+└── README.md               # This documentation
 ```
 
 ## API Reference
