@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 import requests
 import json
@@ -27,13 +29,19 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='.')
 
-# In production, the integration key would be stored securely on the server
-# For testing purposes, we'll accept it from the client
+# Rate limiting
+RATE_LIMIT = os.environ.get('RATE_LIMIT', '30 per minute')
+limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
-# Enable CORS for the API endpoint
+# SSL verification for outbound RUCKUS API calls
+SSL_VERIFY = os.environ.get('SSL_VERIFY', 'false').lower() in ('true', '1', 'yes')
+
+# CORS configuration
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*')
+
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Origin', CORS_ORIGINS)
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     return response
@@ -63,6 +71,7 @@ def index():
 
 # Proxy endpoint to handle authentication requests
 @app.route('/api/authenticate', methods=['POST', 'OPTIONS'])
+@limiter.limit(RATE_LIMIT)
 def authenticate():
     if request.method == 'OPTIONS':
         return '', 200
@@ -160,12 +169,11 @@ def authenticate():
         logger.info(f"{Colors.YELLOW}{'='*80}{Colors.ENDC}\n")
         
         # Make the actual API call to RUCKUS One
-        # Note: In production, you should verify SSL certificates
         response = requests.post(
             api_url,
             json=request_body,
             headers={'Content-Type': 'application/json'},
-            verify=False  # In production, set verify=True and handle certificates properly
+            verify=SSL_VERIFY
         )
         
         # Log API response
@@ -223,6 +231,9 @@ if __name__ == '__main__':
     logger.info(f"{Colors.GREEN}Server running on: http://0.0.0.0:{port}{Colors.ENDC}")
     logger.info(f"{Colors.GREEN}Access locally at: http://localhost:{port}{Colors.ENDC}")
     logger.info(f"{Colors.GREEN}Press Ctrl+C to stop the server{Colors.ENDC}")
+    logger.info(f"{Colors.GREEN}SSL Verification: {'ENABLED' if SSL_VERIFY else 'DISABLED'}{Colors.ENDC}")
+    logger.info(f"{Colors.GREEN}CORS Origins: {CORS_ORIGINS}{Colors.ENDC}")
+    logger.info(f"{Colors.GREEN}Rate Limit: {RATE_LIMIT}{Colors.ENDC}")
     logger.info(f"{Colors.GREEN}{'='*80}{Colors.ENDC}\n")
     
     logger.info(f"{Colors.YELLOW}Color Legend:{Colors.ENDC}")
