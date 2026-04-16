@@ -73,6 +73,9 @@ Available environment variables:
 | `INTEGRATION_KEY` | _(none)_ | RUCKUS integration key (optional, can also be entered in the UI) |
 | `NBI_IP` | _(none)_ | Default RUCKUS One tenant URL |
 | `FLASK_DEBUG` | `false` | Enable Flask debug mode for development |
+| `SSL_VERIFY` | `false` | Verify SSL certificates on outbound RUCKUS API calls |
+| `RATE_LIMIT` | `30 per minute` | Rate limit for the `/api/authenticate` endpoint |
+| `CORS_ORIGINS` | `*` | Allowed CORS origins (set to your domain in production) |
 
 ### Quick Start
 ```bash
@@ -292,8 +295,9 @@ The Flask server acts as a proxy to:
 
 - **Integration Keys**: Never commit integration keys to version control
 - **Production Deployment**: Use environment variables or secret management services
-- **SSL Verification**: Enable proper SSL verification in production (currently disabled for testing)
-- **Rate Limiting**: Implement rate limiting for production use
+- **SSL Verification**: Set `SSL_VERIFY=true` in production to verify RUCKUS API certificates
+- **Rate Limiting**: The `/api/authenticate` endpoint is rate-limited (configurable via `RATE_LIMIT`)
+- **CORS**: Set `CORS_ORIGINS` to your specific domain in production instead of the default wildcard (`*`)
 - **Input Validation**: Additional validation should be added for production environments
 
 ## File Structure
