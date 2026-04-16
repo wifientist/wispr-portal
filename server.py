@@ -1,9 +1,13 @@
 from flask import Flask, request, jsonify, send_from_directory
+from dotenv import load_dotenv
 import requests
 import json
 import os
 import logging
 from datetime import datetime
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Color codes for terminal output
 class Colors:
